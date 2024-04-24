@@ -1,19 +1,27 @@
-# Use an official .NET runtime as a parent image
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
+# Sử dụng image .NET SDK để xây dựng ứng dụng
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 
-# Set the working directory in the container to /app
+# Sao chép mã nguồn từ GitHub vào container
 WORKDIR /app
+COPY . .
+RUN apt-get update && apt-get install -y git
 
-# Copy csproj and restore as distinct layers
-COPY *.csproj ./
+# Xây dựng ứng dụng
 RUN dotnet restore
+RUN dotnet build --configuration Release --no-restore
 
-# Copy everything else and build
-COPY . ./
-RUN dotnet publish -c Release -o out
+# Chạy các lệnh cần thiết để cài đặt và chạy ứng dụng
+RUN dotnet publish --configuration Release --output /app/publish --no-restore
 
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:5.0
+# Sử dụng image runtime nhẹ để chạy ứng dụng
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+
+# Sao chép ứng dụng đã được xây dựng sang image runtime
 WORKDIR /app
-COPY --from=build-env /app/out .
-ENTRYPOINT ["dotnet", "vodka-app.dll"]
+COPY --from=build /app/publish .
+
+# Mở cổng cho ứng dụng (nếu cần)
+EXPOSE 80
+
+# Chạy ứng dụng khi container được khởi chạy
+ENTRYPOINT ["dotnet", "sample-vodka.dll"]
