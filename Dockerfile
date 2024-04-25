@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Mở cổng cho ứng dụng (nếu cần)
-EXPOSE 80
+EXPOSE 5104
 
 # Chạy ứng dụng khi container được khởi chạy
 ENTRYPOINT ["dotnet", "sample-vodka.dll"]
